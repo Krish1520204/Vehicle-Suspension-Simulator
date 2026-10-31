@@ -154,6 +154,11 @@ function out = calculate_outputs(t, X, params, road_func)
     out.tyre_load_ratio_r = tyre_load_ratio_r;
 
     % Performance and Ride Comfort Metrics
+    metrics.peak_body_disp        = max(abs(z_s));
+    metrics.peak_body_disp_f      = max(abs(z_sf));
+    metrics.peak_body_disp_r      = max(abs(z_sr));
+    metrics.rms_body_disp         = rms(z_s);
+
     metrics.rms_heave_accel       = rms(ddz_s);
     metrics.peak_heave_accel      = max(abs(ddz_s));
     metrics.rms_pitch_accel       = rms(ddtheta);
@@ -164,6 +169,12 @@ function out = calculate_outputs(t, X, params, road_func)
 
     metrics.peak_susp_travel_f    = max(abs(susp_def_f));
     metrics.peak_susp_travel_r    = max(abs(susp_def_r));
+    metrics.jounce_limit          = 0.080; % 80 mm standard bumpstop limit
+    metrics.travel_util_f_pct     = (metrics.peak_susp_travel_f / metrics.jounce_limit) * 100;
+    metrics.travel_util_r_pct     = (metrics.peak_susp_travel_r / metrics.jounce_limit) * 100;
+
+    metrics.peak_wheel_disp_f     = max(abs(z_uf));
+    metrics.peak_wheel_disp_r     = max(abs(z_ur));
 
     metrics.min_tyre_ratio_f      = min(tyre_load_ratio_f);
     metrics.min_tyre_ratio_r      = min(tyre_load_ratio_r);

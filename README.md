@@ -169,6 +169,7 @@ VehicleSuspension/
 ├── README.md                           # Mathematical derivation & usage docs
 ├── main.m                              # Primary executable script
 ├── test_multi_bumps.m                  # Comprehensive 3-profile comparison test script
+├── run_parameter_study.m               # Parameter sensitivity & dynamic graph update study
 ├── config/
 │   └── get_vehicle_params.m            # Sedan, SUV, and Sport parameter configurations
 ├── models/
@@ -186,11 +187,24 @@ VehicleSuspension/
 │   └── road_iso8608.m                  # ISO 8608 random road roughness generator
 ├── simulation/
 │   └── run_simulation.m                # Encapsulates ODE45 call, tolerances, and outputs
+├── plotting/
+│   ├── plot_suspension_analysis.m      # Master 7-graph dashboard with numerical KPI card
+│   ├── plot_road_profile.m             # Graph 1: Road displacement profile (front vs rear)
+│   ├── plot_body_displacement.m        # Graph 2: Vehicle body vertical displacement (heave)
+│   ├── plot_pitch_angle.m              # Graph 3: Vehicle body pitch angle
+│   ├── plot_front_suspension_deflection.m # Graph 4: Front suspension deflection with limits
+│   ├── plot_rear_suspension_deflection.m  # Graph 5: Rear suspension deflection with limits
+│   ├── plot_body_acceleration.m        # Graph 6: Vehicle body vertical acceleration (CG & driver)
+│   └── plot_wheel_displacement.m       # Graph 7: Front & rear wheel displacements vs road
+├── analysis/
+│   ├── calculate_kpis.m                # Quantitative KPI extraction (max heave, accel, travel, etc.)
+│   └── print_performance_report.m     # Formatted console performance indicator report
 ├── utils/
 │   ├── validate_model.m                # Eigenvalue, modal frequencies & damping analysis
 │   └── plot_simulation_results.m       # 8-panel publication-quality results plot
 └── outputs/
-    ├── simulation_results.png          # Single scenario simulation response plot
+    ├── suspension_analysis.png         # Master 7-graph analysis with numerical KPI card
+    ├── parameter_variation_damping.png # Parameter sensitivity study (soft vs nominal vs firm)
     ├── road_profiles_comparison.png    # 3-profile road input front vs rear comparison
     └── multi_bump_simulation_comparison.png # 3-profile 4-DOF dynamic comparison
 ```
@@ -204,11 +218,15 @@ VehicleSuspension/
    ```matlab
    cd('e:\Semester 3\Projects\VehicleSuspension');
    ```
-3. Run the primary simulation script:
+3. Run the primary simulation script (executes ODE45, prints KPIs, and renders the 7 graphs):
    ```matlab
    main
    ```
-4. Run the multi-profile comparative analysis (tests Rectangular, Triangular, and Half-Sinusoidal consecutive bumps):
+4. Run the parameter variation & sensitivity study (proves all graphs update when parameters change):
+   ```matlab
+   run_parameter_study
+   ```
+5. Run the multi-profile comparative analysis (tests Rectangular, Triangular, and Half-Sinusoidal consecutive bumps):
    ```matlab
    test_multi_bumps
    ```

@@ -27,6 +27,8 @@ addpath(fullfile(proj_root, 'models'));
 addpath(fullfile(proj_root, 'road_profiles'));
 addpath(fullfile(proj_root, 'simulation'));
 addpath(fullfile(proj_root, 'utils'));
+addpath(fullfile(proj_root, 'plotting'));
+addpath(fullfile(proj_root, 'analysis'));
 
 fprintf('========================================================================\n');
 fprintf('       VEHICLE SUSPENSION SIMULATOR: 4-DOF HALF-CAR DYNAMICS            \n');
@@ -87,34 +89,11 @@ ode_opts = odeset('RelTol', 1e-6, 'AbsTol', 1e-8, 'MaxStep', 1e-3);
 %% 5. Execute ODE45 Integration
 sim = run_simulation(params, road_cfg, tspan, x0, ode_opts);
 
-%% 6. Display Simulation Results & Performance Metrics
-m = sim.metrics;
-fprintf('\n========================================================================\n');
-fprintf('                 SIMULATION PERFORMANCE & RIDE METRICS                  \n');
-fprintf('========================================================================\n');
-fprintf(' Ride Comfort Metrics:\n');
-fprintf('   - Sprung Mass Heave Accel (RMS) : %6.2f m/s^2\n', m.rms_heave_accel);
-fprintf('   - Sprung Mass Heave Accel (Peak): %6.2f m/s^2\n', m.peak_heave_accel);
-fprintf('   - Driver Position Accel (RMS)   : %6.2f m/s^2\n', m.rms_driver_accel);
-fprintf('   - Driver Position Accel (Peak)  : %6.2f m/s^2\n', m.peak_driver_accel);
-fprintf('   - Body Pitch Acceleration (RMS) : %6.2f rad/s^2\n', m.rms_pitch_accel);
-fprintf('   - Body Pitch Acceleration (Peak): %6.2f rad/s^2\n', m.peak_pitch_accel);
-fprintf('   - Max Pitch Angle               : %6.2f deg\n', m.peak_pitch_angle_deg);
-fprintf('------------------------------------------------------------------------\n');
-fprintf(' Suspension Working Space (Travel):\n');
-fprintf('   - Front Peak Travel             : %6.1f mm\n', m.peak_susp_travel_f * 1000);
-fprintf('   - Rear Peak Travel              : %6.1f mm\n', m.peak_susp_travel_r * 1000);
-fprintf('   - Front Peak Suspension Force   : %6.2f kN\n', m.peak_susp_force_f / 1000);
-fprintf('   - Rear Peak Suspension Force    : %6.2f kN\n', m.peak_susp_force_r / 1000);
-fprintf('------------------------------------------------------------------------\n');
-fprintf(' Road Holding & Ground Contact (Wheel Hop):\n');
-fprintf('   - Front Minimum Tyre Load Ratio : %6.2f (Lift-off: %s)\n', ...
-        m.min_tyre_ratio_f, string(m.wheel_lift_front));
-fprintf('   - Rear Minimum Tyre Load Ratio  : %6.2f (Lift-off: %s)\n', ...
-        m.min_tyre_ratio_r, string(m.wheel_lift_rear));
-fprintf('========================================================================\n\n');
+%% 6. Display Numerical Performance Indicators & KPIs
+kpi = calculate_kpis(sim);
+print_performance_report(kpi);
 
-%% 7. Generate & Save Engineering Plots
-fig = plot_simulation_results(sim, true);
+%% 7. Generate & Save Comprehensive 7-Graph Simulation Analysis
+fig = plot_suspension_analysis(sim, true, 'suspension_analysis.png');
 set(fig, 'Color', 'k');
-fprintf('Phase 1 mathematical model execution and validation complete.\n');
+fprintf('Simulation analysis and plotting complete. Graphs generated from mathematical model.\n');
