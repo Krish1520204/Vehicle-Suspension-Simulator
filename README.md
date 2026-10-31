@@ -81,9 +81,37 @@ Measuring motions from static equilibrium (gravity forces are counterbalanced by
   $$\tau = \frac{L}{v} = \frac{a + b}{v}$$
   $$z_{0r}(t) = z_{0f}(t - \tau), \quad \dot{z}_{0r}(t) = \dot{z}_{0f}(t - \tau)$$
 
+### 1.5 Multi-Bump Continuous-Time Road Profiles
+The simulator provides three continuous-time multi-bump road profiles to model speed tables, rumble strips, and consecutive road undulations:
+
+1. **Rectangular Multi-Bump:**
+   - Flat-top plateau at amplitude $H$.
+   - Smooth $C^1$ cosine transitions at edges over $\delta = r_{\text{smooth}} \cdot W$ to prevent step velocity singularities:
+     $$z(u) = \begin{cases}
+     \frac{H}{2}\left[1 - \cos\left(\pi \frac{u}{\delta}\right)\right], & 0 \le u < \delta \\
+     H, & \delta \le u \le W - \delta \\
+     \frac{H}{2}\left[1 + \cos\left(\pi \frac{u - (W - \delta)}{\delta}\right)\right], & W - \delta < u \le W
+     \end{cases}$$
+
+2. **Triangular Multi-Bump:**
+   - Linear flank slope $m = H / (W/2)$.
+   - Parabolic filleted base $[0, \delta]$ and rounded apex $[W/2 - \delta, W/2 + \delta]$ guaranteeing continuous slope $dz/dx$ without sharp apex corners:
+     $$\text{Apex Rounding: } z(u) = H - \frac{m}{2\delta}\left(\frac{W}{2} - u\right)^2, \quad z'(u) = \frac{m}{\delta}\left(\frac{W}{2} - u\right)$$
+
+3. **Half-Sinusoidal Multi-Bump:**
+   - Sinusoidal pulse $z(u) = H \sin\left(\pi \frac{u}{W}\right)$ for $u \in [0, W]$.
+   - Equipped with smooth $C^1$ cosine boundary tapers at entry and exit so $z(0) = 0$, $z'(0) = 0$, $z(W) = 0$, $z'(W) = 0$, enabling stable `ode45` convergence without unphysical damping force shocks.
+
+#### 1.6 Wheelbase Time Delay & Encounter Timetable
+For vehicle speed $v$ and bump pitch $P = W + S$:
+- **Bump $k$ Front Wheel Encounter:**
+  $$t_{f,\text{enter}}(k) = t_{\text{start}} + (k - 1)\frac{P}{v}, \quad t_{f,\text{exit}}(k) = t_{f,\text{enter}}(k) + \frac{W}{v}$$
+- **Bump $k$ Rear Wheel Encounter:**
+  $$t_{r,\text{enter}}(k) = t_{f,\text{enter}}(k) + \tau, \quad t_{r,\text{exit}}(k) = t_{f,\text{exit}}(k) + \tau, \quad \tau = \frac{L}{v}$$
+
 ---
 
-### 1.5 Equations of Motion (Newton-Euler)
+### 1.7 Equations of Motion (Newton-Euler)
 Around the static equilibrium configuration:
 
 1. **Sprung Mass Heave:**
@@ -140,13 +168,18 @@ Solving generalized eigenvalue problem $\det(\mathbf{K} - \omega_n^2 \mathbf{M})
 VehicleSuspension/
 ├── README.md                           # Mathematical derivation & usage docs
 ├── main.m                              # Primary executable script
+├── test_multi_bumps.m                  # Comprehensive 3-profile comparison test script
 ├── config/
 │   └── get_vehicle_params.m            # Sedan, SUV, and Sport parameter configurations
 ├── models/
 │   ├── half_car_4dof_ode.m             # Core 8-state ODE function for ode45
 │   └── calculate_outputs.m             # Post-processing: forces, accelerations, ride metrics
 ├── road_profiles/
-│   ├── get_road_profile.m              # Road dispatcher
+│   ├── get_road_profile.m              # Unified road dispatcher
+│   ├── road_multi_bump.m               # Multi-bump engine (Rectangular, Triangular, Half-Sine)
+│   ├── road_rectangular.m              # Dedicated rectangular multi-bump wrapper
+│   ├── road_triangular.m               # Dedicated triangular multi-bump wrapper
+│   ├── road_halfsine.m                 # Dedicated half-sinusoidal multi-bump wrapper
 │   ├── road_bump.m                     # Cosine speed bump with continuous derivative
 │   ├── road_step.m                     # Smooth sigmoid step profile
 │   ├── road_sine.m                     # Undulating harmonic road profile
@@ -157,7 +190,9 @@ VehicleSuspension/
 │   ├── validate_model.m                # Eigenvalue, modal frequencies & damping analysis
 │   └── plot_simulation_results.m       # 8-panel publication-quality results plot
 └── outputs/
-    └── simulation_results.png          # Generated simulation plots
+    ├── simulation_results.png          # Single scenario simulation response plot
+    ├── road_profiles_comparison.png    # 3-profile road input front vs rear comparison
+    └── multi_bump_simulation_comparison.png # 3-profile 4-DOF dynamic comparison
 ```
 
 ---
@@ -169,9 +204,13 @@ VehicleSuspension/
    ```matlab
    cd('e:\Semester 3\Projects\VehicleSuspension');
    ```
-3. Run the main driver:
+3. Run the primary simulation script:
    ```matlab
    main
+   ```
+4. Run the multi-profile comparative analysis (tests Rectangular, Triangular, and Half-Sinusoidal consecutive bumps):
+   ```matlab
+   test_multi_bumps
    ```
 
 ### 3.1 Customizing Scenarios in `main.m`

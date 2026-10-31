@@ -53,12 +53,17 @@ fprintf('  Wheelbase (L = a + b)         : %.2f m (a=%.2f m, b=%.2f m)\n\n', ...
 modal = validate_model(params);
 
 %% 3. Configure Road Profile Excitation
-% Type options: 'bump', 'step', 'sine', 'iso8608'
-road_cfg.type    = 'bump';
-road_cfg.H       = 0.08;       % Bump height: 80 mm (0.08 m)
-road_cfg.W       = 0.80;       % Bump length: 800 mm (0.8 m)
-road_cfg.t_start = 0.40;       % Bump onset time for front axle (s)
-road_cfg.v       = 12.5;       % Vehicle forward speed: 12.5 m/s (45 km/h)
+% Type options:
+%   - Multi-Bump: 'half_sine', 'triangular', 'rectangular', or 'multi_bump'
+%   - Single/Standard: 'bump', 'step', 'sine', 'iso8608'
+road_cfg.type          = 'half_sine'; % Selectable: 'rectangular', 'triangular', 'half_sine', 'bump'
+road_cfg.num_bumps     = 8;           % Number of consecutive bumps (7-10)
+road_cfg.H             = 0.05;        % Bump height: 50 mm (0.05 m)
+road_cfg.W             = 0.60;        % Bump length: 600 mm (0.6 m)
+road_cfg.spacing       = 1.20;        % Gap between consecutive bumps (m)
+road_cfg.t_start       = 0.40;        % First bump onset time for front axle (s)
+road_cfg.v             = 12.5;        % Vehicle forward speed: 12.5 m/s (45 km/h)
+road_cfg.smoothing_ratio = 0.08;      % Smooth C^1 transition fraction
 
 wheelbase_delay = params.L / road_cfg.v;
 fprintf('Road Scenario: %s Profile\n', upper(road_cfg.type));
@@ -66,10 +71,14 @@ fprintf('  Forward Speed (v)             : %.1f m/s (%.1f km/h)\n', ...
         road_cfg.v, road_cfg.v * 3.6);
 fprintf('  Bump Height (H)               : %.1f mm\n', road_cfg.H * 1000);
 fprintf('  Bump Length (W)               : %.1f mm\n', road_cfg.W * 1000);
+if isfield(road_cfg, 'num_bumps')
+    fprintf('  Consecutive Bumps (N)         : %d\n', road_cfg.num_bumps);
+    fprintf('  Bump Spacing (Gap)            : %.2f m\n', road_cfg.spacing);
+end
 fprintf('  Wheelbase Time Delay (tau)    : %.4f s\n\n', wheelbase_delay);
 
 %% 4. Define Integration Interval & Initial Conditions
-tspan = [0, 2.5];             % Integration time window: 0 to 2.5 seconds
+tspan = [0, 3.0];             % Integration time window: 0 to 3.0 seconds
 x0    = zeros(8, 1);          % System starts from static equilibrium
 
 % Set solver tolerances
@@ -107,4 +116,5 @@ fprintf('=======================================================================
 
 %% 7. Generate & Save Engineering Plots
 fig = plot_simulation_results(sim, true);
+set(fig, 'Color', 'k');
 fprintf('Phase 1 mathematical model execution and validation complete.\n');
