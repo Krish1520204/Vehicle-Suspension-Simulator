@@ -168,6 +168,7 @@ Solving generalized eigenvalue problem $\det(\mathbf{K} - \omega_n^2 \mathbf{M})
 VehicleSuspension/
 ├── README.md                           # Mathematical derivation & usage docs
 ├── main.m                              # Primary executable script
+├── run_animation.m                     # Top-level physics-driven 2D animation runner
 ├── test_multi_bumps.m                  # Comprehensive 3-profile comparison test script
 ├── run_parameter_study.m               # Parameter sensitivity & dynamic graph update study
 ├── config/
@@ -196,6 +197,12 @@ VehicleSuspension/
 │   ├── plot_rear_suspension_deflection.m  # Graph 5: Rear suspension deflection with limits
 │   ├── plot_body_acceleration.m        # Graph 6: Vehicle body vertical acceleration (CG & driver)
 │   └── plot_wheel_displacement.m       # Graph 7: Front & rear wheel displacements vs road
+├── animation/
+│   ├── animate_vehicle_suspension.m    # Master animation coordinator & GIF/PNG exporter
+│   ├── draw_sedan_body.m               # Sedan body, windows, B-pillar, lights, CG marker
+│   ├── draw_wheel.m                    # Wheels with rotating spokes & alloy rims
+│   ├── draw_suspension_spring_damper.m # Parametric coil spring & telescoping damper dashpot
+│   └── draw_outdoor_scenery.m          # Sky, clouds, buildings, trees, road & bumps
 ├── analysis/
 │   ├── calculate_kpis.m                # Quantitative KPI extraction (max heave, accel, travel, etc.)
 │   └── print_performance_report.m     # Formatted console performance indicator report
@@ -203,6 +210,8 @@ VehicleSuspension/
 │   ├── validate_model.m                # Eigenvalue, modal frequencies & damping analysis
 │   └── plot_simulation_results.m       # 8-panel publication-quality results plot
 └── outputs/
+    ├── suspension_animation.gif        # Synchronized physics-driven animated GIF
+    ├── suspension_animation_frame.png  # High-resolution animation snapshot
     ├── suspension_analysis.png         # Master 7-graph analysis with numerical KPI card
     ├── parameter_variation_damping.png # Parameter sensitivity study (soft vs nominal vs firm)
     ├── road_profiles_comparison.png    # 3-profile road input front vs rear comparison
@@ -218,26 +227,64 @@ VehicleSuspension/
    ```matlab
    cd('e:\Semester 3\Projects\VehicleSuspension');
    ```
-3. Run the primary simulation script (executes ODE45, prints KPIs, and renders the 7 graphs):
+3. Run the physics-driven 2D animation (visual sedan traversing multiple bumps with dynamic springs & dampers):
+   ```matlab
+   run_animation
+   ```
+4. Run the primary simulation script (executes ODE45, prints KPIs, and renders the 7 graphs):
    ```matlab
    main
    ```
-4. Run the parameter variation & sensitivity study (proves all graphs update when parameters change):
+5. Run the parameter variation & sensitivity study (proves all graphs update when parameters change):
    ```matlab
    run_parameter_study
    ```
-5. Run the multi-profile comparative analysis (tests Rectangular, Triangular, and Half-Sinusoidal consecutive bumps):
+6. Run the multi-profile comparative analysis (tests Rectangular, Triangular, and Half-Sinusoidal consecutive bumps):
    ```matlab
    test_multi_bumps
    ```
 
-### 3.1 Customizing Scenarios in `main.m`
+### 3.1 Customizing Scenarios in `main.m` & `run_animation.m`
 - **Vehicle presets:**
   ```matlab
   params = get_vehicle_params('sedan'); % Options: 'sedan', 'suv', 'sport'
   ```
 - **Road profiles:**
   ```matlab
-  road_cfg.type = 'bump';    % Options: 'bump', 'step', 'sine', 'iso8608'
-  road_cfg.v    = 12.5;      % Forward speed in m/s (12.5 m/s = 45 km/h)
+  road_cfg.type          = 'half_sine'; % Options: 'half_sine', 'triangular', 'rectangular', 'bump'
+  road_cfg.num_bumps     = 6;           % Consecutive bump count
+  road_cfg.H             = 0.055;       % Bump height in meters
+  road_cfg.v             = 10.0;        % Forward speed in m/s (10 m/s = 36 km/h)
   ```
+
+---
+
+## 4. Physics-Driven Animated Visualization
+
+The animation visualizes the exact, calculated states from the 4-DOF half-car model with zero hardcoded or random motion:
+
+1. **Sedan Geometry & Aesthetics:**
+   - Modeled after the reference visual guide with a sky-blue exterior finish (`[0.55, 0.77, 0.92]`).
+   - Includes front and rear tinted windows, structural B-pillar, door handle recesses, front aerodynamic headlights, and red taillights.
+   - Features the Center of Gravity (CG) quartered circle marker with dynamic dimensions $L_f$, $L_r$, and pitch angle indicator $\theta$.
+
+2. **Dynamic Suspension Springs & Dampers:**
+   - Front and rear suspensions render realistic mechanical coil springs (zigzag turns) and dashpot dampers (telescoping piston inside fluid cylinder).
+   - The top mounts are affixed to the chassis and rotate with pitch $\theta$ and translate with heave $z_s$.
+   - The bottom mounts connect directly to wheel hubs moving with independent vertical wheel displacements $z_{uf}$ and $z_{ur}$.
+   - Springs and dampers dynamically stretch and compress according to calculated deflections $\delta_{sf}(t)$ and $\delta_{sr}(t)$.
+
+3. **Wheel Kinematics & Rotation:**
+   - Wheels translate vertically with unsprung masses ($z_{uf}, z_{ur}$).
+   - Spoke rotation is synchronized with forward vehicle speed: $\theta_{\text{spoke}}(t) = -v \cdot t / R_w$.
+
+4. **Multi-Bump Outdoor Environment:**
+   - Outdoor background featuring gradient sky, procedural cumulus clouds, distant city skyline buildings, verge greenery, and asphalt road.
+   - The multiple road bumps are drawn directly on the terrain using the mathematical bump formulation ($H, W, S$).
+   - Diagonally hatched ground foundation below bumps matches the reference engineering diagram.
+
+5. **Scale & Camera Tracking:**
+   - Vehicle body length is $4.60\text{ m}$.
+   - The viewing window horizontal span is set to $18.4\text{ m}$, keeping the car at exactly $25\%$ of the simulation window width.
+   - The camera moves horizontally with the vehicle ($X_{\text{cam}} = X_{CG} - 8.4\text{ m}$ to $X_{CG} + 10.0\text{ m}$), smoothly tracking the sedan across consecutive bumps.
+   - Real-time engineering HUD displays elapsed time, forward speed, body heave, pitch angle, suspension travel, and wheel hop.
