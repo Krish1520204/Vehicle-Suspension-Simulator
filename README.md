@@ -168,6 +168,7 @@ Solving generalized eigenvalue problem $\det(\mathbf{K} - \omega_n^2 \mathbf{M})
 VehicleSuspension/
 ├── README.md                           # Mathematical derivation & usage docs
 ├── main.m                              # Primary executable script
+├── run_dashboard.m                     # Interactive UI Dashboard & Bump Analyzer launcher
 ├── run_animation.m                     # Top-level physics-driven 2D animation runner
 ├── test_multi_bumps.m                  # Comprehensive 3-profile comparison test script
 ├── run_parameter_study.m               # Parameter sensitivity & dynamic graph update study
@@ -188,6 +189,8 @@ VehicleSuspension/
 │   └── road_iso8608.m                  # ISO 8608 random road roughness generator
 ├── simulation/
 │   └── run_simulation.m                # Encapsulates ODE45 call, tolerances, and outputs
+├── dashboard/
+│   └── suspension_dashboard.m          # Professional interactive App Designer UI dashboard
 ├── plotting/
 │   ├── plot_suspension_analysis.m      # Master 7-graph dashboard with numerical KPI card
 │   ├── plot_road_profile.m             # Graph 1: Road displacement profile (front vs rear)
@@ -210,6 +213,7 @@ VehicleSuspension/
 │   ├── validate_model.m                # Eigenvalue, modal frequencies & damping analysis
 │   └── plot_simulation_results.m       # 8-panel publication-quality results plot
 └── outputs/
+    ├── dashboard_screenshot.png        # High-resolution interactive dashboard snapshot
     ├── suspension_animation.gif        # Synchronized physics-driven animated GIF
     ├── suspension_animation_frame.png  # High-resolution animation snapshot
     ├── suspension_analysis.png         # Master 7-graph analysis with numerical KPI card
@@ -227,19 +231,23 @@ VehicleSuspension/
    ```matlab
    cd('e:\Semester 3\Projects\VehicleSuspension');
    ```
-3. Run the physics-driven 2D animation (visual sedan traversing multiple bumps with dynamic springs & dampers):
+3. **Launch the Interactive Bump Analyzer Dashboard (UIFigure):**
+   ```matlab
+   run_dashboard
+   ```
+4. Run the standalone physics-driven 2D animation:
    ```matlab
    run_animation
    ```
-4. Run the primary simulation script (executes ODE45, prints KPIs, and renders the 7 graphs):
+5. Run the primary simulation script (executes ODE45, prints KPIs, and renders the 7 graphs):
    ```matlab
    main
    ```
-5. Run the parameter variation & sensitivity study (proves all graphs update when parameters change):
+6. Run the parameter variation & sensitivity study (proves all graphs update when parameters change):
    ```matlab
    run_parameter_study
    ```
-6. Run the multi-profile comparative analysis (tests Rectangular, Triangular, and Half-Sinusoidal consecutive bumps):
+7. Run the multi-profile comparative analysis (tests Rectangular, Triangular, and Half-Sinusoidal consecutive bumps):
    ```matlab
    test_multi_bumps
    ```
@@ -288,3 +296,49 @@ The animation visualizes the exact, calculated states from the 4-DOF half-car mo
    - The viewing window horizontal span is set to $18.4\text{ m}$, keeping the car at exactly $25\%$ of the simulation window width.
    - The camera moves horizontally with the vehicle ($X_{\text{cam}} = X_{CG} - 8.4\text{ m}$ to $X_{CG} + 10.0\text{ m}$), smoothly tracking the sedan across consecutive bumps.
    - Real-time engineering HUD displays elapsed time, forward speed, body heave, pitch angle, suspension travel, and wheel hop.
+
+---
+
+## 5. Interactive MATLAB Dashboard & Bump Analyzer
+
+The dashboard (`run_dashboard.m` / `dashboard/suspension_dashboard.m`) is built using MATLAB UI components (`uifigure`, `uiaxes`, `uidropdown`, `uislider`, `uibutton`, `uipanel`, `uilabel`, `uieditfield`) designed after the reference engineering UI guide:
+
+1. **Top Header Card:**
+   - Deep navy boxed frame: `"BUMP ANALYZER"`.
+
+2. **Interactive Simulation Controls:**
+   - **Road Profile Dropdown (`uidropdown`):** Select between `'Half-sinusoidal'`, `'Triangular'`, and `'Rectangular'`.
+   - **Bump Amplitude Slider (`uislider`):** Range $15 - 110\text{ mm}$ (live value display, default $55.0\text{ mm}$).
+   - **Vehicle Speed Slider (`uislider`):** Range $10 - 90\text{ km/h}$ (live $\text{km/h}$ and $\text{m/s}$ display, default $36.0\text{ km/h}$).
+   - **Damping Coefficient Slider (`uislider`):** Range $600 - 3600\text{ N}\cdot\text{s/m}$ (live display, default $1600\text{ N}\cdot\text{s/m}$).
+   - **Natural Frequency Slider (`uislider`):** Range $0.8 - 2.6\text{ Hz}$ (live Hz and calculated stiffness display, default $1.30\text{ Hz}$).
+   - **Action Buttons (`uibutton`):**
+     - `[Start]`: Solves ODE45 with current slider settings, updates all graphs and KPI readouts, and launches real-time 25 FPS animation.
+     - `[Pause]`: Freezes timer playback and cursor indicators.
+     - `[Resume]`: Resumes playback timer from current frame.
+     - `[Reset]`: Restores default vehicle & bump parameters, re-simulates, and returns to $t = 0$.
+
+3. **Vehicle Physical Specifications Grid:**
+   - 2-column parameter table matching the reference UI layout:
+     - Percentage of Front Weight ($\%$)
+     - Front & Rear Suspension Stiffness ($k_{sf}, k_{sr}$) dynamically calculated from $f_n$
+     - Front & Rear Damping Coefficients ($c_{sf}, c_{sr}$)
+     - Sprung Mass ($m_s$) and Unsprung Masses ($m_{uf}, m_{ur}$)
+     - Tyre Stiffnesses ($k_{tf}, k_{tr}$), Pitch Inertia ($I_y$), and Wheelbase ($L$)
+
+4. **Numerical Performance Indicators (Live KPIs):**
+   - Maximum Body Heave Displacement ($\text{mm}$)
+   - Maximum Vertical Acceleration at CG ($\text{m/s}^2$ and $g$)
+   - Driver Seat Acceleration (RMS, $\text{m/s}^2$)
+   - ISO 2631 Ride Comfort Level classification
+   - Maximum Pitch Angle ($\deg$)
+   - Front & Rear Suspension Travel Utilization (vs $80\text{ mm}$ bumpstop limit)
+   - Dynamic Road Grip Status (Safe vs Transient Tyre Lift-off Warning)
+
+5. **Live Response Graphs & Bump Geometry:**
+   - **Road Bump Geometry:** Front vs rear wheel road height profiles $z_{0f}, z_{0r}$ (faithful to reference UI).
+   - **Live Body Displacement:** Heave $z_s$, front connection $z_{sf}$, rear connection $z_{sr}$.
+   - **Live Acceleration:** CG vertical acceleration and driver seat acceleration with ISO comfort thresholds.
+   - **Suspension Deflection:** Front and rear travels with $\pm 80\text{ mm}$ bumpstop limits.
+   - **Pitch Response:** Pitch angle $\theta$ and pitch angular velocity $\dot{\theta}$.
+   - **Synchronized Time Cursors:** Vertical red dashed lines move across all 5 graphs in real-time as the vehicle traverses the bumps.

@@ -134,6 +134,8 @@ function out = calculate_outputs(t, X, params, road_func)
     % Suspension kinematics and forces
     out.susp_def_f  = susp_def_f;
     out.susp_def_r  = susp_def_r;
+    out.delta_sf    = susp_def_f;  % Standard mathematical alias
+    out.delta_sr    = susp_def_r;  % Standard mathematical alias
     out.susp_vdef_f = susp_vdef_f;
     out.susp_vdef_r = susp_vdef_r;
     out.F_sf        = F_sf;
@@ -142,8 +144,12 @@ function out = calculate_outputs(t, X, params, road_func)
     % Tyre kinematics and forces
     out.z0f               = z0f;
     out.z0r               = z0r;
+    out.z_0f              = z0f;   % Standard mathematical alias
+    out.z_0r              = z0r;   % Standard mathematical alias
     out.dz0f              = dz0f;
     out.dz0r              = dz0r;
+    out.dz_0f             = dz0f;  % Standard mathematical alias
+    out.dz_0r             = dz0r;  % Standard mathematical alias
     out.tyre_def_f        = tyre_def_f;
     out.tyre_def_r        = tyre_def_r;
     out.F_tf              = F_tf;
